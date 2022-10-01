@@ -10,7 +10,7 @@ ifneq ($(KERNELRELEASE),)
 # Change the build environment
 else
 	KDIR	?= /lib/modules/$(KVER)/build
-	PWD	:= $(shell pwd)
+	PWD		:= $(shell pwd)
 
 default:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules

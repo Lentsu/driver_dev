@@ -1,29 +1,43 @@
+/*
+ *	LINUX MODULE INCLUDES
+ */
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/kernel.h>	// For printk
 #include <linux/types.h>	// For dev_t
+#include <linux/fs.h>
+
+/*
+ *	LOCAL INCLUDES
+ */ 
+#include "scull.h"
+	
+/*
+ *	GLOBALS
+*/
+int scull_major = SCULL_MAJOR;
+int scull_minor = 0;
+int scull_nr_devs = SCULL_NR_DEVS;
+const char* scull_name = SCULL_NAME;
 
 static int __init scull_init(void) {
 	
 	/*
-	 * ALLOCATE DEVICE NUMBERS	
+	 *	ALLOCATE DEVICE NUMBERS	
 	 */
 	
 	// Vars
-	int scull_major, scull_minor, scull_number_of_devs;
-	scull_major = scull_minor = 0;
-	scull_number_of_devs = 4;
-	const char* scull_name = "scull";
+	dev_t dev = 0;
 
-	dev_t* dev;	
 	int reg_chrdev_res;	// Holds the return value of device number registeration
 
 	// If major not set, allocate both numbers
 	if ( scull_major ) {
 		dev = MKDEV( scull_major, scull_minor );
-		reg_chrdev_res = register_chrdev_region(dev, scull_number_of_devs, scull_name);
+		reg_chrdev_res = register_chrdev_region( dev, scull_nr_devs, scull_name);
 	} else {
-		reg_chrdev_res = alloc_chrdev_res( &dev, scull_minor,
-											scull_number_of_devs, scull_name );
+		reg_chrdev_res = alloc_chrdev_region( &dev, scull_minor,
+											scull_nr_devs, scull_name );
 	}
 	
 	/*	
@@ -38,7 +52,6 @@ static int __init scull_init(void) {
 }
 
 static void __exit scull_exit(void) {
-	printk(KERN_INFO "scull: can't get major %d\n", scull_major);
 	scull_clean();
 }
 
@@ -48,8 +61,7 @@ static void __exit scull_exit(void) {
  */
 static void scull_clean() {
 	// unregister device numbers <
-		int unreg_chrdev_res;
-		unreg_chrdev = unregister_chrdev( scull_major, scull_name );
+		unregister_chrdev( scull_major, scull_name );
 	// >
 }
 
