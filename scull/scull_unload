@@ -1,0 +1,12 @@
+#!/bin/sh
+module="scull"
+device="scull"
+
+# Get major number from proc
+major=$(awk "\\$2= =\"$module\" {print \\$1}" /proc/devices)
+
+# Invoke rmmod with given arguments
+/sbin/rmmod $module $* || exit 1
+
+# Remove nodes
+rm -f /dev/${device}[0-3]

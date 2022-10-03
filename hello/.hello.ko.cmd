@@ -1,0 +1,1 @@
+cmd_/home/lentsu/driver_dev/hello/hello.ko := ld -r -m elf_x86_64 -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T arch/x86/module.lds -o /home/lentsu/driver_dev/hello/hello.ko /home/lentsu/driver_dev/hello/hello.o /home/lentsu/driver_dev/hello/hello.mod.o;  true
