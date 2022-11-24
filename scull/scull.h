@@ -22,9 +22,7 @@ struct scull_dev {
 }; 
 
 // A method to setup scull character device structure
-static void scull_setup_cdev(struct scull_dev*, dev_t, int);
+static void scull_setup_cdev(struct scull_dev*, int);
 
-// A structure for scull file operations
-struct file_operations scull_fops;
 
 #endif

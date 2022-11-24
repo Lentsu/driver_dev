@@ -4,32 +4,38 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/types.h>	// For dev_t
-#include <linux/fs.h>		// For device number registeration
-#include <linux/cdev.h>		// For
+#include <linux/fs.h>		// For dev_t methods and fops
+#include <linux/cdev.h>		// For the CDEV structure
 
 /*
  *	LOCAL INCLUDES
  */ 
 #include "scull.h"
 	
-/*
- *	GLOBALS
-*/
+/*	GLOBALS	*/
+
 int scull_major = SCULL_MAJOR;
 int scull_minor = 0;
 dev_t devn;
 int scull_nr_devs = SCULL_NR_DEVS;
 const char* scull_name = SCULL_NAME;
 
-// Scull device structure
+/*	SCULL DEVICE STRUCTURE	*/
 scull_dev* s_dev;
+struct file_operations scull_fops;	// fops for scull device
 
+/*	END OF GLOBALS	*/
+
+/*
+ * MODULE'S INIT FUNCTION
+ */
 static int __init scull_init(void) {
 	
-	printk(KERN_ALERT "scull: Allocating device numbers.\n", scull_major);
 	/*
 	 *	ALLOCATE DEVICE NUMBERS	
 	 */
+	
+	printk(KERN_ALERT "scull: Allocating device numbers.\n", scull_major);
 	
 	// Initialize device number struct
 	devn = 0;
@@ -45,36 +51,45 @@ static int __init scull_init(void) {
 											scull_nr_devs, scull_name );
 	}
 	
-	/*	
-	 *	CHECK THAT ALL OPERATIONS WERE SUCCESSFULL	
-	 */
+	//	Check that all operations were successful
 	scull_major = MAJOR(devn);	// Get major
 	if (reg_chrdev_res) {
 		printk(KERN_ALERT "scull: can't get major %d\n", scull_major);
 		return reg_chrdev_res;
 	}
 
-	/*
-	 * ALLOCATE CDEV STRUCTURE
-	 */
-	struct cdev* s_dev->cdev = cdev_alloc();
+	// allocate cdev structure inside s_dev
+	s_dev->cdev = cdev_alloc();
 	
-	/*
-	 * SETUP THE SCULL DEVICE STRUCTURE
-	 */
-	scull_setup_cdev();
+	// setup the scull device structure
+	scull_setup_cdev(s_dev, 0);
 
-	/*
-	 * NO INIT ERRORS
-	 */
+	// RETURN WITH NO INIT ERRORS
 	return 0;
 }
 
-/* 
- * FUNCTION TO RETURN THE USED RESOURCES.
- * 	(UNLOADS EVERYTHING IN REVERSE ORDER)
- */
+scull_setup_cdev(struct scull_dev* dev, int index) {
+	
+	int err;
+	int devno = MKDEV(scull_major, scull_minor + index);
 
+	cdev_init(&dev->cdev, &scull_fops);
+	dev->cdev.owner = THIS_MODULE;
+	dev->cdev.fops = &scull_fops;
+
+	// Try adding the character device
+	err = cdev_add(&dev->cdev, devno, 1);
+	// Fail gracefully if needed
+	if (err)
+		printk(KERN_NOTICE "Error: %d adding scull%d", err, index);
+}
+
+/*
+ * MODULE'S EXIT FUNCTION
+ *
+ * USED TO FREE EVERYTHING IN REVERSE ORDER.
+ *
+ */
 static void __exit scull_exit(void) {
 	
 	// unregister character device structure <
